@@ -26,6 +26,18 @@
 	<body>
 		<div class="logo">LOGO</div>
 
-		<button class="btn">Connect wallet</button>
+		<button class="btn" onclick="connectWallet()">Connect wallet</button>
+
+
+		<!-- Connecting javascript files -->
+		<script src="js/jetPack.js"></script>
+
+		<script>
+			const jetpack = new JetPack()
+
+			function connectWallet() {
+				jetpack.getAddress()
+			}
+		</script>
 	</body>
 </html>
