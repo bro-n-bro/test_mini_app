@@ -44,11 +44,13 @@
 
 
         // Public method to get address
-        getAddress() {
+        getAddress(chain_id) {
             // Encode data to Base64
             const encodedData = encodeToBase64({
                 method: 'getAddress',
-                data: null
+                data: {
+                    chain_id
+                }
             })
 
             // Construct Telegram bot URL
