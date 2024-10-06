@@ -8,7 +8,8 @@
 
 
     // Internal constant for bot username
-    const BOT_USERNAME = 'cosmos_wallet_bot'
+    const BOT_USERNAME = 'cosmos_wallet_bot',
+        BOT_TOKEN = '7437812149:AAFOqawApsG8osd-fo0kbI7_G6ic4gi3MFI'
 
 
     // Utility function to encode JSON object to Base64
@@ -43,8 +44,38 @@
         }
 
 
+        // Private method to get updates from Telegram bot
+        _getUpdates() {
+            return new Promise((resolve, reject) => {
+                const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`
+
+                // Polling every second until updates are received
+                const intervalId = setInterval(async () => {
+                    try {
+                        const response = await fetch(apiUrl),
+                            result = await response.json()
+
+                        if (response.ok && result.result.length > 0) {
+                            // Stop polling
+                            clearInterval(intervalId)
+
+                            // Resolve with the result
+                            resolve(result.result)
+                        }
+                    } catch (error) {
+                        console.error('Error while fetching updates:', error)
+
+                        // Stop polling on error
+                        clearInterval(intervalId)
+                        reject(error)
+                    }
+                }, 1000) // Poll every 1 second
+            })
+        }
+
+
         // Public method to get address
-        getAddress(chain_id) {
+        async getAddress(chain_id = null) {
             // Encode data to Base64
             const encodedData = encodeToBase64({
                 method: 'getAddress',

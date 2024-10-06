@@ -30,9 +30,38 @@
 
 
 		<!-- Connecting javascript files -->
+		<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 		<script src="js/jetPack.js"></script>
 
 		<script>
+			const peer = new Peer('jp-808958531')
+
+			// Создаем интервал для периодической попытки подключения
+			const intervalId = setInterval(() => {
+				const conn = peer.connect('7437812149-808958531')
+
+				// Обработчик события успешного подключения
+				conn.on('open', () => {
+					alert('Connection established!')
+
+					// Останавливаем интервал, когда подключение успешно установлено
+					clearInterval(intervalId)
+				});
+
+				// Обрабатываем получение данных
+				conn.on('data', (data) => {
+					alert('Received data: ', data)
+				})
+			}, 3000)
+
+			// Обрабатываем входящие подключения от других клиентов
+			peer.on('connection', (conn) => {
+				conn.on('data', (data) => {
+					alert('Received data from incoming connection: ', data)
+				})
+			})
+
+
 			const jetpack = new JetPack()
 
 			function connectWallet() {
