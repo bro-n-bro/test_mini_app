@@ -44,11 +44,9 @@
 
 				// Обработчик события успешного подключения
 				conn.on('open', () => {
-					alert('Connection established!')
-
 					// Останавливаем интервал, когда подключение успешно установлено
 					clearInterval(intervalId)
-				});
+				})
 
 				// Обрабатываем получение данных
 				conn.on('data', (data) => {
@@ -60,11 +58,11 @@
 			}, 3000)
 
 			// Обрабатываем входящие подключения от других клиентов
-			peer.on('connection', (conn) => {
-				conn.on('data', (data) => {
-					alert('Received data from incoming connection: ', data)
-				})
-			})
+			// peer.on('connection', (conn) => {
+			// 	conn.on('data', (data) => {
+			// 		alert('Received data from incoming connection: ', data)
+			// 	})
+			// })
 
 
 			const jetpack = new JetPack()
