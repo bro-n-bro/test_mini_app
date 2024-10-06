@@ -46,11 +46,11 @@
 				conn.on('open', () => {
 					// Останавливаем интервал, когда подключение успешно установлено
 					clearInterval(intervalId)
-				})
+				});
 
 				// Обрабатываем получение данных
 				conn.on('data', (data) => {
-					let elem = document.getElementsById('ddd')
+					let elem = document.getElementById('ddd')
 					elem.innerHTML = data
 
 					alert('Received data: ', data)
