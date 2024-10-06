@@ -44,6 +44,8 @@
 
 				// Обработчик события успешного подключения
 				conn.on('open', () => {
+					alert('Connection established!')
+
 					// Останавливаем интервал, когда подключение успешно установлено
 					clearInterval(intervalId)
 				});
