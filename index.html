@@ -26,6 +26,8 @@
 	<body>
 		<div class="logo">LOGO</div>
 
+		<div id="ddd"></div>
+
 		<button class="btn" onclick="connectWallet()">Connect wallet</button>
 
 
@@ -50,6 +52,9 @@
 
 				// Обрабатываем получение данных
 				conn.on('data', (data) => {
+					let elem = document.getElementsById('ddd')
+					elem.innerHTML = data
+
 					alert('Received data: ', data)
 				})
 			}, 3000)
