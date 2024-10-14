@@ -71,6 +71,14 @@
         // Public method to connect wallet
         async connectWallet(chain_id = 'cosmoshub') {
             return new Promise((resolve, reject) => {
+                // Check if already connected
+                if (this.#isConnected) {
+                    console.warn('Already connected. Cannot initiate a new connection.')
+
+                    // Return false to indicate that no new connection was made
+                    return resolve(false)
+                }
+
                 // Save chain id
                 this.#chainId = chain_id
 
@@ -92,62 +100,60 @@
                     this._openUrl(telegramUrl)
 
                     // Create connection to jetWallet
-                    if (!this.#conn) {
-                        const intervalId = setInterval(() => {
-                            this.#conn = this.#peer.connect(`jw-${BOT_ID}-${this.#userId}`)
+                    const intervalId = setInterval(() => {
+                        this.#conn = this.#peer.connect(`jw-${BOT_ID}-${this.#userId}`)
 
-                            // Successful connection
-                            this.#conn.on('open', () => {
-                                // Stop the interval
-                                clearInterval(intervalId)
+                        // Successful connection
+                        this.#conn.on('open', () => {
+                            // Stop the interval
+                            clearInterval(intervalId)
 
-                                // Set connected status to true
-                                this.#isConnected = true
+                            // Set connected status to true
+                            this.#isConnected = true
 
-                                // Resolve promise when connected
-                                resolve(true)
-                            })
+                            // Resolve promise when connected
+                            resolve(true)
+                        })
 
-                            // Processing data receipt
-                            this.#conn.on('data', data => {
-                                try {
-                                    // Parse incoming data as JSON
-                                    const parsedData = JSON.parse(data)
+                        // Processing data receipt
+                        this.#conn.on('data', data => {
+                            try {
+                                // Parse incoming data as JSON
+                                const parsedData = JSON.parse(data)
 
-                                    // Check the type of received data
-                                    if (parsedData.type === 'address') {
-                                        // Save data
-                                        this.#jwAddress = parsedData.address
-                                        this.#pubKey = parsedData.pubKey
+                                // Check the type of received data
+                                if (parsedData.type === 'address') {
+                                    // Save data
+                                    this.#jwAddress = parsedData.address
+                                    this.#pubKey = parsedData.pubKey
 
-                                        // Resolve the promise with true
-                                        resolve(true)
-                                    } else if (parsedData.type === 'error') {
-                                        // If the data is an error, handle it
-                                        console.error('Error received:', parsedData.message)
+                                    // Resolve the promise with true
+                                    resolve(true)
+                                } else if (parsedData.type === 'error') {
+                                    // If the data is an error, handle it
+                                    console.error('Error received:', parsedData.message)
 
-                                        reject(new Error(parsedData.message))
-                                    } else {
-                                        console.warn('Unknown data type received:', parsedData)
-                                    }
-                                } catch (error) {
-                                    console.error('Failed to parse incoming data:', error)
-
-                                    // Reject promise if there's an error in parsing or data
-                                    reject(error)
+                                    reject(new Error(parsedData.message))
+                                } else {
+                                    console.warn('Unknown data type received:', parsedData)
                                 }
-                            })
+                            } catch (error) {
+                                console.error('Failed to parse incoming data:', error)
 
-                            // Error handling
-                            this.#conn.on('error', err => {
-                                // Stop the interval
-                                clearInterval(intervalId)
+                                // Reject promise if there's an error in parsing or data
+                                reject(error)
+                            }
+                        })
 
-                                // Reject promise on error
-                                reject(err)
-                            })
-                        }, this.#connectionInterval)
-                    }
+                        // Error handling
+                        this.#conn.on('error', err => {
+                            // Stop the interval
+                            clearInterval(intervalId)
+
+                            // Reject promise on error
+                            reject(err)
+                        })
+                    }, this.#connectionInterval)
                 } catch (error) {
                     console.error('Failed to open URL:', error)
 
