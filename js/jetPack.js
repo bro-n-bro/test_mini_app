@@ -153,6 +153,21 @@
                             // Reject promise on error
                             reject(err)
                         })
+
+                        // Handle disconnection event
+                        this.#conn.on('close', () => {
+                            console.warn('Connection closed.')
+
+                            // Set the connection status to false
+                            this.#isConnected = false
+                        })
+
+                        this.#conn.on('disconnected', () => {
+                            console.warn('Connection lost.')
+
+                            // Set the connection status to false
+                            this.#isConnected = false
+                        })
                     }, this.#connectionInterval)
                 } catch (error) {
                     console.error('Failed to open URL:', error)
