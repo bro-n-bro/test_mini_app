@@ -133,6 +133,7 @@
                                     // If the data is an error, handle it
                                     console.error('Error received:', parsedData.message)
 
+                                    // Reject promise
                                     reject(new Error(parsedData.message))
                                 } else {
                                     console.warn('Unknown data type received:', parsedData)
