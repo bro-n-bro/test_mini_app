@@ -26,18 +26,26 @@
     // Main JetPack class definition
     class JetPack {
         // Private params
-        #userId = '808958531'
-        #peer = new Peer()
+        #userId = ''
+        // #userId = '808958531'
+        #peer = null
+        #peerID = null
         #conn = null
         #chainId = ''
         #jwAddress = ''
         #pubKey = ''
         #isConnected = false
-        #connectionInterval = 200
+        #connectionInterval = 500
 
 
         // Constructor for JetPack class
         constructor() {
+            // Generate a random ID
+            this.#peerID = this._generateRandomId()
+
+            // Init Peer
+            this.#peer = new Peer(this.#peerID)
+
             // Get telegram user ID from telegram mini app init data
 			if (window.Telegram && window.Telegram.WebApp) {
 				// Decode data
@@ -68,6 +76,12 @@
         }
 
 
+        // Generate a random ID
+        _generateRandomId() {
+            return `${this.#userId}-${Math.random().toString(36).substring(2, 15)}`
+        }
+
+
         // Public method to connect wallet
         async connectWallet(chain_id = 'cosmoshub') {
             return new Promise((resolve, reject) => {
@@ -86,13 +100,14 @@
                 const encodedData = encodeToBase64({
                     method: 'connectWallet',
                     data: {
-                        peer: this.#peer.id,
+                        peer_id: this.#peerID,
                         chain_id: this.#chainId
                     }
                 })
 
                 // Construct Telegram bot URL
                 const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
+                // const telegramUrl = `http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`
 
                 // Try to open the URL
                 try {
@@ -110,49 +125,38 @@
 
                             // Set connected status to true
                             this.#isConnected = true
-
-                            // Resolve promise when connected
-                            resolve(true)
                         })
 
                         // Processing data receipt
                         this.#conn.on('data', data => {
                             try {
-                                // Parse incoming data as JSON
-                                const parsedData = JSON.parse(data)
-
                                 // Check the type of received data
-                                if (parsedData.type === 'address') {
+                                if (data.type === 'address') {
                                     // Save data
-                                    this.#jwAddress = parsedData.address
-                                    this.#pubKey = parsedData.pubKey
+                                    this.#jwAddress = data.address
 
                                     // Resolve the promise with true
                                     resolve(true)
-                                } else if (parsedData.type === 'error') {
-                                    // If the data is an error, handle it
-                                    console.error('Error received:', parsedData.message)
-
+                                } else if (data.type === 'error') {
                                     // Reject promise
-                                    reject(new Error(parsedData.message))
+                                    reject(`Error received: ${data.message}`)
                                 } else {
-                                    console.warn('Unknown data type received:', parsedData)
+                                    // Reject promise
+                                    reject('Unknown data type received.')
                                 }
                             } catch (error) {
-                                console.error('Failed to parse incoming data:', error)
-
-                                // Reject promise if there's an error in parsing or data
-                                reject(error)
+                                // Reject promise
+                                reject('Failed to parse incoming data.')
                             }
                         })
 
                         // Error handling
-                        this.#conn.on('error', err => {
+                        this.#conn.on('error', error => {
                             // Stop the interval
                             clearInterval(intervalId)
 
                             // Reject promise on error
-                            reject(err)
+                            reject(error)
                         })
 
                         // Handle disconnection event
@@ -171,29 +175,27 @@
                         })
                     }, this.#connectionInterval)
                 } catch (error) {
-                    console.error('Failed to open URL:', error)
-
                     // Reject promise if URL opening fails
-                    reject(error)
+                    reject('Failed to open URL.')
                 }
             })
         }
 
 
         // Public method to connection status
-        async isConnected() {
+        isConnected() {
             return this.#isConnected
         }
 
 
         // Public method to get address
-        async getAddress() {
+        getAddress() {
             return this.#jwAddress
         }
 
 
         // Public method to get pubKey
-        async getPubKey() {
+        getPubKey() {
             return this.#pubKey
         }
     }

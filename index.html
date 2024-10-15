@@ -42,10 +42,10 @@
 				const jetpack = new JetPack()
 
 				// Get connectWallet
-				jetpack.connectWallet('stride-1').then(() => {
-					// Show address
+				jetpack.connectWallet('bostrom').then(() => {
+					document.querySelector('.btn').style.display = 'none'
 					document.getElementById('ddd').innerText = jetpack.getAddress()
-				}).catch((err) => {
+				}).catch(error => {
 					console.log(error)
 				})
 			}
