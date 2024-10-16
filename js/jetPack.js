@@ -46,9 +46,10 @@
             // Init Peer
             this.#peer = new Peer(this.#peerID)
 
+            alert(window)
             // Get telegram user ID from telegram mini app init data
 			if (window.Telegram && window.Telegram.WebApp) {
-                alert('111111')
+                alert('222')
 				// Decode data
 				let decodedString = decodeURIComponent(Telegram.WebApp.initData)
 
