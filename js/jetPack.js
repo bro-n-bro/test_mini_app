@@ -142,8 +142,8 @@
                 })
 
                 // Construct Telegram bot URL
-                // const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
-                const telegramUrl = `http://localhost:8081/auth?tgWebAppStartParam=${encodedData}`
+                const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
+                // const telegramUrl = `http://localhost:8081/auth?tgWebAppStartParam=${encodedData}`
 
                 // Try to open the URL
                 try {

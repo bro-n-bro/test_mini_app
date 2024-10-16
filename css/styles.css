@@ -200,7 +200,7 @@ button
 }
 
 
-.send_btn
+.btn.send_btn
 {
     display: none;
 }
