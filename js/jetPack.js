@@ -26,8 +26,8 @@
     // Main JetPack class definition
     class JetPack {
         // Private params
-        // #userId = ''
-        #userId = '808958531'
+        #userId = ''
+        // #userId = '808958531'
         #peer = null
         #peerID = null
         #conn = null
@@ -66,8 +66,6 @@
 				// Set data
 				if (userParams) {
 					this.#userId = userParams.id
-
-                    document.getElementById('ddd').innerText = this.#userId
 				}
 			}
         }
@@ -98,10 +96,8 @@
             return new Promise((resolve, reject) => {
                 // Check if already connected
                 if (this.#isConnected) {
-                    console.warn('Already connected. Cannot initiate a new connection.')
-
                     // Return false to indicate that no new connection was made
-                    return resolve(false)
+                    return reject('Already connected. Cannot initiate a new connection.')
                 }
 
                 // Save chain id
@@ -118,7 +114,6 @@
 
                 // Construct Telegram bot URL
                 const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
-                // const telegramUrl = `http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`
 
                 // Try to open the URL
                 try {
@@ -168,15 +163,11 @@
 
                         // Handle disconnection event
                         this.#conn.on('close', () => {
-                            console.warn('Connection closed.')
-
                             // Set the connection status to false
                             this.#isConnected = false
                         })
 
                         this.#conn.on('disconnected', () => {
-                            console.warn('Connection lost.')
-
                             // Set the connection status to false
                             this.#isConnected = false
                         })
