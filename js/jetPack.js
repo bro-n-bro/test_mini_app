@@ -26,8 +26,8 @@
     // Main JetPack class definition
     class JetPack {
         // Private params
-        #userId = ''
-        // #userId = '808958531'
+        // #userId = ''
+        #userId = '808958531'
         #peer = null
         #peerID = null
         #conn = null
@@ -57,6 +57,8 @@
 				// Set data
 				if (userParams) {
 					this.#userId = userParams.id
+
+					document.getElementById('ddd').innerText = this.#userId
 				}
 			}
         }
@@ -116,6 +118,7 @@
 
                     // Create connection to jetWallet
                     const intervalId = setInterval(() => {
+                        // Save connection
                         this.#conn = this.#peer.connect(`jw-${BOT_ID}-${this.#userId}`)
 
                         // Successful connection
@@ -129,24 +132,19 @@
 
                         // Processing data receipt
                         this.#conn.on('data', data => {
-                            try {
-                                // Check the type of received data
-                                if (data.type === 'address') {
-                                    // Save data
-                                    this.#jwAddress = data.address
+                            // Check the type of received data
+                            if (data.type === 'address') {
+                                // Save data
+                                this.#jwAddress = data.address
 
-                                    // Resolve the promise with true
-                                    resolve(true)
-                                } else if (data.type === 'error') {
-                                    // Reject promise
-                                    reject(`Error received: ${data.message}`)
-                                } else {
-                                    // Reject promise
-                                    reject('Unknown data type received.')
-                                }
-                            } catch (error) {
+                                // Resolve the promise with true
+                                resolve(true)
+                            } else if (data.type === 'error') {
                                 // Reject promise
-                                reject('Failed to parse incoming data.')
+                                reject(`Error received: ${data.message}`)
+                            } else {
+                                // Reject promise
+                                reject('Unknown data type received.')
                             }
                         })
 
