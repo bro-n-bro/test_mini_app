@@ -166,6 +166,20 @@ button
 }
 
 
+#address
+{
+    width: 100%;
+    margin-bottom: 20px;
+
+    text-align: center;
+}
+
+#address:empty
+{
+    display: none;
+}
+
+
 .btn
 {
     font-size: 18px;
@@ -183,4 +197,10 @@ button
     color: currentColor;
     border-radius: 10px;
     background: linear-gradient(to bottom,  #6be3fd 0%,#002749 100%);
+}
+
+
+.send_btn
+{
+    display: none;
 }

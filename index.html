@@ -26,9 +26,11 @@
 	<body>
 		<div class="logo">LOGO</div>
 
-		<div id="ddd"></div>
+		<div id="address"></div>
 
 		<button class="btn">Connect wallet</button>
+
+		<button class="btn send_btn">Send Tx</button>
 
 
 		<!-- Connecting javascript files -->
@@ -43,17 +45,40 @@
 			jetpack.init().then(() => {
 				// Get connectWallet
 				function connectWallet() {
-					// Get connectWallet
 					jetpack.connectWallet('bostrom').then(() => {
+						document.getElementById('address').innerText = jetpack.getAddress()
+
 						document.querySelector('.btn').style.display = 'none'
-						document.getElementById('ddd').innerText = jetpack.getAddress()
+						document.querySelector('.send_btn').style.display = 'inline-block'
 					}).catch(error => {
 						console.log(error)
 					})
 				}
 
+
+				// Send Tx
+				function sendTX() {
+					jetpack.sendTx([{
+						typeUrl: '/cosmos.bank.v1beta1.MsgSend',
+						value: {
+							fromAddress: jetpack.getAddress(),
+							toAddress: 'bostrom1p4hc20yrucx4hk4lf68wmuzvsa0rrxkum3re8f',
+							amount: [{
+								denom: 'boot',
+								amount: '100000'
+							}]
+						}
+					}]).then(result => {
+						console.log(result)
+					}).catch(error => {
+						console.log(error)
+					})
+				}
+
+
 				// Add click event listener to the button
 				document.querySelector('.btn').addEventListener('click', connectWallet)
+				document.querySelector('.send_btn').addEventListener('click', sendTX)
 			}).catch(error => {
 				console.error('Initialization failed:', error)
 			})

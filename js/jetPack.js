@@ -36,6 +36,7 @@
         #pubKey = ''
         #isConnected = false
         #connectionInterval = 500
+        #callbacks = {}
 
 
         // Constructor for JetPack class
@@ -91,12 +92,40 @@
         }
 
 
+        // Handle data
+        _handleData(data, resolve, reject) {
+            // Check the type of received data
+            if (data.type === 'address') {
+                // Save data
+                this.#jwAddress = data.address
+
+                // Resolve the promise
+                resolve(true)
+            } else if (data.type === 'error') {
+                // Reject promise
+                reject(`Error received: ${data.message}`)
+            } else {
+                // Reject promise
+                reject('Unknown data type received.')
+            }
+
+            // Check if there is a requestId and if there is a callback for it
+            if (data.requestId && this.#callbacks[data.requestId]) {
+                // Execute callback
+                this.#callbacks[data.requestId](data)
+
+                // Remove callback after execution
+                delete this.#callbacks[data.requestId]
+            }
+        }
+
+
         // Public method to connect wallet
-        async connectWallet(chain_id = 'cosmoshub') {
+        connectWallet(chain_id = 'cosmoshub') {
             return new Promise((resolve, reject) => {
                 // Check if already connected
                 if (this.#isConnected) {
-                    // Return false to indicate that no new connection was made
+                    // Reject promise
                     return reject('Already connected. Cannot initiate a new connection.')
                 }
 
@@ -113,7 +142,8 @@
                 })
 
                 // Construct Telegram bot URL
-                const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
+                // const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
+                const telegramUrl = `http://localhost:8081/auth?tgWebAppStartParam=${encodedData}`
 
                 // Try to open the URL
                 try {
@@ -125,57 +155,71 @@
                         // Save connection
                         this.#conn = this.#peer.connect(`jw-${BOT_ID}-${this.#userId}`)
 
-                        // Successful connection
-                        this.#conn.on('open', () => {
-                            // Stop the interval
-                            clearInterval(intervalId)
+                        if (this.#conn) {
+                            // Successful connection
+                            this.#conn.on('open', () => {
+                                // Stop the interval
+                                clearInterval(intervalId)
 
-                            // Set connected status to true
-                            this.#isConnected = true
-                        })
+                                // Set connected status to true
+                                this.#isConnected = true
+                            })
 
-                        // Processing data receipt
-                        this.#conn.on('data', data => {
-                            // Check the type of received data
-                            if (data.type === 'address') {
-                                // Save data
-                                this.#jwAddress = data.address
+                            // Processing data receipt
+                            this.#conn.on('data', data => this._handleData(data, resolve, reject))
 
-                                // Resolve the promise with true
-                                resolve(true)
-                            } else if (data.type === 'error') {
+                            // Error handling
+                            this.#conn.on('error', error => {
+                                // Stop the interval
+                                clearInterval(intervalId)
+
                                 // Reject promise
-                                reject(`Error received: ${data.message}`)
-                            } else {
-                                // Reject promise
-                                reject('Unknown data type received.')
-                            }
-                        })
+                                reject(error)
+                            })
 
-                        // Error handling
-                        this.#conn.on('error', error => {
-                            // Stop the interval
-                            clearInterval(intervalId)
+                            // Handle disconnection event
+                            this.#conn.on('close', () => {
+                                // Set the connection status to false
+                                this.#isConnected = false
+                            })
 
-                            // Reject promise on error
-                            reject(error)
-                        })
-
-                        // Handle disconnection event
-                        this.#conn.on('close', () => {
-                            // Set the connection status to false
-                            this.#isConnected = false
-                        })
-
-                        this.#conn.on('disconnected', () => {
-                            // Set the connection status to false
-                            this.#isConnected = false
-                        })
+                            this.#conn.on('disconnected', () => {
+                                // Set the connection status to false
+                                this.#isConnected = false
+                            })
+                        }
                     }, this.#connectionInterval)
                 } catch (error) {
-                    // Reject promise if URL opening fails
+                    // Reject promise
                     reject('Failed to open URL.')
                 }
+            })
+        }
+
+
+        // Public method to send Tx
+        sendTx(messages) {
+            return new Promise((resolve, reject) => {
+                if (!this.#isConnected || !this.#conn) {
+                    return reject('No connection established.')
+                }
+
+                // Generate a random ID
+                const requestId = this._generateRandomId()
+
+                // Save callback
+                this.#callbacks[requestId] = response => resolve(response)
+
+                // Send message
+                this.#conn.send({
+                    method: 'sendTx',
+                    data: {
+                        peer_id: this.#peerID,
+                        chain_id: this.#chainId,
+                        request_id: requestId,
+                        msg: messages
+                    }
+                })
             })
         }
 
