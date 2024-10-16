@@ -40,16 +40,23 @@
 
         // Constructor for JetPack class
         constructor() {
+
+        }
+
+
+        // Initialization
+        async init() {
             // Generate a random ID
             this.#peerID = this._generateRandomId()
 
             // Init Peer
             this.#peer = new Peer(this.#peerID)
 
-            alert(window)
             // Get telegram user ID from telegram mini app init data
 			if (window.Telegram && window.Telegram.WebApp) {
-                alert('222')
+                // Initialize the mini-application
+                await Telegram.WebApp.ready()
+
 				// Decode data
 				let decodedString = decodeURIComponent(Telegram.WebApp.initData)
 
@@ -60,7 +67,7 @@
 				if (userParams) {
 					this.#userId = userParams.id
 
-					document.getElementById('ddd').innerText = this.#userId
+                    document.getElementById('ddd').innerText = this.#userId
 				}
 			}
         }

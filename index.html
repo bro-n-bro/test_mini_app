@@ -28,7 +28,7 @@
 
 		<div id="ddd"></div>
 
-		<button class="btn" onclick="connectWallet()">Connect wallet</button>
+		<button class="btn">Connect wallet</button>
 
 
 		<!-- Connecting javascript files -->
@@ -37,19 +37,26 @@
 		<script src="js/jetPack.js"></script>
 
 		<script>
-			// Get connectWallet
-			function connectWallet() {
-				// Create JetPack instance
-				const jetpack = new JetPack()
+			// Create JetPack instance
+			const jetpack = new JetPack()
 
+			jetpack.init().then(() => {
 				// Get connectWallet
-				jetpack.connectWallet('bostrom').then(() => {
-					document.querySelector('.btn').style.display = 'none'
-					document.getElementById('ddd').innerText = jetpack.getAddress()
-				}).catch(error => {
-					console.log(error)
-				})
-			}
+				function connectWallet() {
+					// Get connectWallet
+					jetpack.connectWallet('bostrom').then(() => {
+						document.querySelector('.btn').style.display = 'none'
+						document.getElementById('ddd').innerText = jetpack.getAddress()
+					}).catch(error => {
+						console.log(error)
+					})
+				}
+
+				// Add click event listener to the button
+				document.querySelector('.btn').addEventListener('click', connectWallet)
+			}).catch(error => {
+				console.error('Initialization failed:', error);
+			})
 		</script>
 	</body>
 </html>
