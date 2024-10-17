@@ -101,6 +101,9 @@
 
                 // Resolve the promise
                 resolve(true)
+            } else if (data.type === 'tx') {
+                // Resolve the promise
+                resolve(data.hash)
             } else if (data.type === 'error') {
                 // Reject promise
                 reject(`Error received: ${data.message}`)
@@ -143,7 +146,7 @@
 
                 // Construct Telegram bot URL
                 const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
-                // const telegramUrl = `http://localhost:8081/auth?tgWebAppStartParam=${encodedData}`
+                // const telegramUrl = `http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`
 
                 // Try to open the URL
                 try {
