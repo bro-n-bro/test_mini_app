@@ -9,7 +9,8 @@
 
     // Internal constant for bot username
     const BOT_USERNAME = 'cosmos_wallet_bot',
-        BOT_ID = '7437812149'
+        BOT_ID = 7437812149,
+        APP_NAME = 'dev_JetWallet'
 
 
     // Utility function to encode JSON object to Base64
@@ -25,8 +26,8 @@
     // Main JetPack class definition
     class JetPack {
         // Private params
-        #userId = ''
-        // #userId = '808958531'
+        #userId = null
+        // #userId = 808958531
         #peer = null
         #peerID = null
         #conn = null
@@ -136,14 +137,11 @@
                 }
             })
 
-            // Construct Telegram bot URL
-            const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
-            // const telegramUrl = `http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`
-
             // Try to open the URL
             try {
                 // Open the URL
-                this._openUrl(telegramUrl)
+                this._openUrl(`https://t.me/${BOT_USERNAME}/${APP_NAME}?startapp=${encodedData}`)
+                // this._openUrl(`http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`)
 
                 // Connection
                 this._connection(resolve, reject)
