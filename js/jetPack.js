@@ -69,6 +69,8 @@
 					this.#userId = userParams.id
 				}
 			}
+
+            alert(this.#userId)
         }
 
 
@@ -94,6 +96,8 @@
 
         // Handle data
         _handleData(data, resolve, reject) {
+            console.log(data)
+
             // Check the type of received data
             if (data.type === 'address') {
                 // Save data
@@ -106,7 +110,7 @@
                 resolve(data.hash)
             } else if (data.type === 'error') {
                 // Reject promise
-                reject(`Error received: ${data.message}`)
+                reject(data.message)
             } else {
                 // Reject promise
                 reject('Unknown data type received.')
@@ -123,78 +127,109 @@
         }
 
 
+        // Open wallet
+        _openWallet(chain_id, resolve, reject) {
+            // Save chain id
+            this.#chainId = chain_id
+
+            // Encode data to Base64
+            const encodedData = encodeToBase64({
+                method: 'connectWallet',
+                data: {
+                    peer_id: this.#peerID,
+                    chain_id: this.#chainId
+                }
+            })
+
+            // Construct Telegram bot URL
+            const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
+            // const telegramUrl = `http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`
+
+            // Try to open the URL
+            try {
+                // Open the URL
+                this._openUrl(telegramUrl)
+
+                // Connection
+                this._connection(resolve, reject)
+            } catch (error) {
+                // Reject promise
+                reject('Failed to open URL.')
+            }
+        }
+
+
+        // Connection
+        _connection(resolve, reject) {
+            // Create connection to jetWallet
+            const intervalId = setInterval(() => {
+                // Save connection
+                this.#conn = this.#peer.connect(`jw-${BOT_ID}-${this.#userId}`)
+
+                if (this.#conn) {
+                    // Successful connection
+                    this.#conn.on('open', () => {
+                        // Stop the interval
+                        clearInterval(intervalId)
+
+                        // Set connected status to true
+                        this.#isConnected = true
+                    })
+
+                    // Processing data receipt
+                    this.#conn.on('data', data => this._handleData(data, resolve, reject))
+
+                    // Error handling
+                    this.#conn.on('error', error => {
+                        // Stop the interval
+                        clearInterval(intervalId)
+
+                        // Reject promise
+                        reject(error)
+                    })
+
+                    // Handle disconnection event
+                    this.#conn.on('close', () => {
+                        // Set the connection status to false
+                        this.#isConnected = false
+                    })
+
+                    this.#conn.on('disconnected', () => {
+                        // Set the connection status to false
+                        this.#isConnected = false
+                    })
+                }
+            }, this.#connectionInterval)
+        }
+
+
         // Public method to connect wallet
         connectWallet(chain_id = 'cosmoshub') {
             return new Promise((resolve, reject) => {
                 // Check if already connected
-                if (this.#isConnected) {
-                    // Reject promise
-                    return reject('Already connected. Cannot initiate a new connection.')
-                }
+                if (!this.#isConnected) {
+                    // First connection
+                    this._openWallet(chain_id, resolve, reject)
+                } else {
+                    // Generate a random ID
+                    const requestId = this._generateRandomId()
 
-                // Save chain id
-                this.#chainId = chain_id
-
-                // Encode data to Base64
-                const encodedData = encodeToBase64({
-                    method: 'connectWallet',
-                    data: {
-                        peer_id: this.#peerID,
-                        chain_id: this.#chainId
+                    // Save callback
+                    this.#callbacks[requestId] = response => {
+                        response.type === 'error'
+                            ? reject(response.message)
+                            : resolve(response)
                     }
-                })
 
-                // Construct Telegram bot URL
-                const telegramUrl = `https://t.me/${BOT_USERNAME}/dev_JetWallet?startapp=${encodedData}`
-                // const telegramUrl = `http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`
-
-                // Try to open the URL
-                try {
-                    // Open the URL
-                    this._openUrl(telegramUrl)
-
-                    // Create connection to jetWallet
-                    const intervalId = setInterval(() => {
-                        // Save connection
-                        this.#conn = this.#peer.connect(`jw-${BOT_ID}-${this.#userId}`)
-
-                        if (this.#conn) {
-                            // Successful connection
-                            this.#conn.on('open', () => {
-                                // Stop the interval
-                                clearInterval(intervalId)
-
-                                // Set connected status to true
-                                this.#isConnected = true
-                            })
-
-                            // Processing data receipt
-                            this.#conn.on('data', data => this._handleData(data, resolve, reject))
-
-                            // Error handling
-                            this.#conn.on('error', error => {
-                                // Stop the interval
-                                clearInterval(intervalId)
-
-                                // Reject promise
-                                reject(error)
-                            })
-
-                            // Handle disconnection event
-                            this.#conn.on('close', () => {
-                                // Set the connection status to false
-                                this.#isConnected = false
-                            })
-
-                            this.#conn.on('disconnected', () => {
-                                // Set the connection status to false
-                                this.#isConnected = false
-                            })
+                    // Send message
+                    this.#conn.send({
+                        method: 'connectWallet',
+                        data: {
+                            peer_id: this.#peerID,
+                            chain_id: this.#chainId,
+                            request_id: requestId
                         }
-                    }, this.#connectionInterval)
-                } catch (error) {
-                    // Reject promise
-                    reject('Failed to open URL.')
+                    })
                 }
             })
         }

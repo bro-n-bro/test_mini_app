@@ -46,12 +46,12 @@
 				// Get connectWallet
 				function connectWallet() {
 					jetpack.connectWallet('bostrom').then(() => {
-						document.getElementById('address').innerText = jetpack.getAddress()
+						document.getElementById('address').innerHTML = `Your address:<br> ${jetpack.getAddress().slice(0, 9)}...${jetpack.getAddress().slice(-6)}`
 
 						document.querySelector('.btn').style.display = 'none'
 						document.querySelector('.send_btn').style.display = 'inline-block'
 					}).catch(error => {
-						console.log(error)
+						alert(error)
 					})
 				}
 
@@ -69,7 +69,13 @@
 							}]
 						}
 					}]).then(result => {
-						alert(result)
+						if (result.type === 'error') {
+							alert('Status: Error, Desc: ' + result.message)
+						}
+
+						if (result.type === 'tx') {
+							alert('Status: Success, Hash: ' + result.hash)
+						}
 					}).catch(error => {
 						console.log(error)
 					})
