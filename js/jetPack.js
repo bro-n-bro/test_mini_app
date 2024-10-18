@@ -9,7 +9,6 @@
 
     // Internal constant for bot username
     const BOT_USERNAME = 'cosmos_wallet_bot',
-        // BOT_TOKEN = '7437812149:AAFOqawApsG8osd-fo0kbI7_G6ic4gi3MFI',
         BOT_ID = '7437812149'
 
 
@@ -69,8 +68,6 @@
 					this.#userId = userParams.id
 				}
 			}
-
-            alert(this.#userId)
         }
 
 
@@ -96,8 +93,6 @@
 
         // Handle data
         _handleData(data, resolve, reject) {
-            console.log(data)
-
             // Check the type of received data
             if (data.type === 'address') {
                 // Save data
