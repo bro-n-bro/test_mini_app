@@ -26,6 +26,13 @@
 	<body>
 		<div class="logo">LOGO</div>
 
+		<div class="connection_status">
+			<span class="green">Connected</span>
+			<span class="red" style="display: inline-block;">Disconnected</span>
+		</div>
+
+		<div class="tx_result"></div>
+
 		<div id="address"></div>
 
 		<button class="btn">Connect wallet</button>
@@ -40,54 +47,84 @@
 
 		<script>
 			// Create JetPack instance
-			const jetpack = new JetPack()
+			const jetpack = new JetPack(true)
 
-			jetpack.init().then(() => {
-				// Get connectWallet
-				function connectWallet() {
-					jetpack.connectWallet('bostrom').then(() => {
-						document.getElementById('address').innerHTML = `Your address:<br> ${jetpack.getAddress().slice(0, 9)}...${jetpack.getAddress().slice(-6)}`
+			jetpack.on('error', message => {
+				console.log('Error: ' + message)
 
-						document.querySelector('.btn').style.display = 'none'
-						document.querySelector('.send_btn').style.display = 'inline-block'
-					}).catch(error => {
-						alert(error)
-					})
-				}
-
-
-				// Send Tx
-				function sendTX() {
-					jetpack.sendTx([{
-						typeUrl: '/cosmos.bank.v1beta1.MsgSend',
-						value: {
-							fromAddress: jetpack.getAddress(),
-							toAddress: 'bostrom1p4hc20yrucx4hk4lf68wmuzvsa0rrxkum3re8f',
-							amount: [{
-								denom: 'boot',
-								amount: '100000'
-							}]
-						}
-					}]).then(result => {
-						if (result.type === 'error') {
-							alert('Status: Error, Desc: ' + result.message)
-						}
-
-						if (result.type === 'tx') {
-							alert('Status: Success, Hash: ' + result.hash)
-						}
-					}).catch(error => {
-						console.log(error)
-					})
-				}
-
-
-				// Add click event listener to the button
-				document.querySelector('.btn').addEventListener('click', connectWallet)
-				document.querySelector('.send_btn').addEventListener('click', sendTX)
-			}).catch(error => {
-				console.error('Initialization failed:', error)
+				alert(message)
 			})
+
+			jetpack.on('connect', () => {
+				console.log('Connection successful.')
+
+				document.querySelector('.connection_status .red').style.display = 'none'
+				document.querySelector('.connection_status .green').style.display = 'inline-block'
+			})
+
+			jetpack.on('disconnect', () => {
+				console.log('Disconnected.')
+
+				document.querySelector('.connection_status .green').style.display = 'none'
+				document.querySelector('.connection_status .red').style.display = 'inline-block'
+
+				document.getElementById('address').innerHTML = ''
+
+				document.querySelector('.send_btn').style.display = 'none'
+				document.querySelector('.btn').style.display = 'inline-block'
+			})
+
+
+			// Get connectWallet
+			function connectWallet() {
+				jetpack.connectWallet('bostrom').then(() => {
+					document.getElementById('address').innerHTML = `Your address:<br> ${jetpack.getAddress().slice(0, 9)}...${jetpack.getAddress().slice(-6)}`
+
+					document.querySelector('.btn').style.display = 'none'
+					document.querySelector('.send_btn').style.display = 'inline-block'
+				}).catch(error => {
+					alert(error)
+				})
+			}
+
+
+			// Send Tx
+			function sendTX() {
+				jetpack.sendTx([{
+					typeUrl: '/cosmos.bank.v1beta1.MsgSend',
+					value: {
+						fromAddress: jetpack.getAddress(),
+						toAddress: 'bostrom1p4hc20yrucx4hk4lf68wmuzvsa0rrxkum3re8f',
+						amount: [{
+							denom: 'boot',
+							amount: '100000'
+						}]
+					}
+				}]).then(result => {
+					if (result.type === 'error') {
+						document.querySelector('.tx_result').innerHTML = `Error:<br> ${result.message}`
+
+						setTimeout(() => {
+							document.querySelector('.tx_result').innerHTML = ''
+						}, 5000)
+					}
+
+					if (result.type === 'tx') {
+						document.querySelector('.tx_result').innerHTML = `Success:<br> ${result.hash}`
+
+						setTimeout(() => {
+							document.querySelector('.tx_result').innerHTML = ''
+						}, 5000)
+					}
+				}).catch(error => {
+					console.log(error)
+				})
+			}
+
+
+			// Add click event listener to the button
+			document.querySelector('.btn').addEventListener('click', connectWallet)
+			document.querySelector('.send_btn').addEventListener('click', sendTX)
 		</script>
 	</body>
 </html>

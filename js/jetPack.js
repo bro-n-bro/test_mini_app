@@ -37,38 +37,49 @@
         #isConnected = false
         #connectionInterval = 500
         #callbacks = {}
+        #eventListeners = {}
 
 
         // Constructor for JetPack class
-        constructor() {
+        constructor(autoConnect) {
+            // Init
+            this.init().then(() => {
+                if (autoConnect) {
+                    // Auto connection
+                    this._connection()
+                }
+            })
 
+            // Destroy Peer on close
+            window.addEventListener('beforeunload', () => {
+                // Close Peer
+                this.#conn.close()
+
+                // Destroy Peer
+                this.#peer.destroy()
+            })
         }
 
 
-        // Initialization
-        async init() {
-            // Generate a random ID
-            this.#peerID = this._generateRandomId()
+        // Subscribe to events
+        on(event, callback) {
+            // Check event
+            if (!this.#eventListeners[event]) {
+                this.#eventListeners[event] = []
+            }
 
-            // Init Peer
-            this.#peer = new Peer(this.#peerID)
+            // Save callback
+            this.#eventListeners[event].push(callback)
+        }
 
-            // Get telegram user ID from telegram mini app init data
-			if (window.Telegram && window.Telegram.WebApp) {
-                // Initialize the mini-application
-                await Telegram.WebApp.ready()
 
-				// Decode data
-				let decodedString = decodeURIComponent(Telegram.WebApp.initData)
+        // Event call
+        _emit(event, data) {
+            const listeners = this.#eventListeners[event]
 
-				// Get user params
-				let userParams = JSON.parse(new URLSearchParams(decodedString).get('user'))
-
-				// Set data
-				if (userParams) {
-					this.#userId = userParams.id
-				}
-			}
+            if (listeners) {
+                listeners.forEach(callback => callback(data))
+            }
         }
 
 
@@ -93,23 +104,23 @@
 
 
         // Handle data
-        _handleData(data, resolve, reject) {
+        _handleData(data) {
             // Check the type of received data
             if (data.type === 'address') {
                 // Save data
                 this.#jwAddress = data.address
 
-                // Resolve the promise
-                resolve(true)
+                // Emit an event for address reception
+                this._emit('addressReceived', data.address)
             } else if (data.type === 'tx') {
-                // Resolve the promise
-                resolve(data.hash)
+                // Emit an event for transaction reception
+                this._emit('txReceived', data.hash)
             } else if (data.type === 'error') {
-                // Reject promise
-                reject(data.message)
+                // Emit an event for an error
+                this._emit('error', data.message)
             } else {
-                // Reject promise
-                reject('Unknown data type received.')
+                // Emit an event for an error
+                this._emit('error', 'Unknown data type received.')
             }
 
             // Check if there is a requestId and if there is a callback for it
@@ -124,7 +135,7 @@
 
 
         // Open wallet
-        _openWallet(chain_id, resolve, reject) {
+        _openWallet(chain_id, request_id, resolve, reject) {
             // Save chain id
             this.#chainId = chain_id
 
@@ -133,7 +144,8 @@
                 method: 'connectWallet',
                 data: {
                     peer_id: this.#peerID,
-                    chain_id: this.#chainId
+                    chain_id: this.#chainId,
+                    request_id
                 }
             })
 
@@ -144,7 +156,7 @@
                 // this._openUrl(`http://localhost:8080/auth?tgWebAppStartParam=${encodedData}`)
 
                 // Connection
-                this._connection(resolve, reject)
+                this._connection()
             } catch (error) {
                 // Reject promise
                 reject('Failed to open URL.')
@@ -153,7 +165,7 @@
 
 
         // Connection
-        _connection(resolve, reject) {
+        _connection() {
             // Create connection to jetWallet
             const intervalId = setInterval(() => {
                 // Save connection
@@ -167,53 +179,86 @@
 
                         // Set connected status to true
                         this.#isConnected = true
+
+                        // Call the 'connect' event
+                        this._emit('connect')
                     })
 
                     // Processing data receipt
-                    this.#conn.on('data', data => this._handleData(data, resolve, reject))
+                    this.#conn.on('data', data => this._handleData(data))
 
                     // Error handling
-                    this.#conn.on('error', error => {
+                    this.#conn.on('error', () => {
                         // Stop the interval
                         clearInterval(intervalId)
-
-                        // Reject promise
-                        reject(error)
                     })
 
                     // Handle disconnection event
                     this.#conn.on('close', () => {
                         // Set the connection status to false
                         this.#isConnected = false
+
+                        // Call the 'disconnect' event
+                        this._emit('disconnect')
                     })
 
                     this.#conn.on('disconnected', () => {
                         // Set the connection status to false
                         this.#isConnected = false
+
+                        // Call the 'disconnect' event
+                        this._emit('disconnect')
                     })
                 }
             }, this.#connectionInterval)
         }
 
 
+        // Init
+        async init() {
+            // Generate a random ID
+            this.#peerID = this._generateRandomId()
+
+            // Init Peer
+            this.#peer = new Peer(this.#peerID)
+
+            // Get telegram user ID from telegram mini app init data
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Initialize the mini-application
+                await Telegram.WebApp.ready()
+
+                // Decode data
+                let decodedString = decodeURIComponent(Telegram.WebApp.initData)
+
+                // Get user params
+                let userParams = JSON.parse(new URLSearchParams(decodedString).get('user'))
+
+                // Set data
+                if (userParams) {
+                    this.#userId = userParams.id
+                }
+            }
+        }
+
+
         // Public method to connect wallet
         connectWallet(chain_id = 'cosmoshub') {
             return new Promise((resolve, reject) => {
+                // Generate a random ID
+                const requestId = this._generateRandomId()
+
+                // Save callback
+                this.#callbacks[requestId] = response => {
+                    response.type === 'error'
+                        ? reject(response.message)
+                        : resolve(response)
+                }
+
                 // Check if already connected
                 if (!this.#isConnected) {
                     // First connection
-                    this._openWallet(chain_id, resolve, reject)
+                    this._openWallet(chain_id, requestId, resolve, reject)
                 } else {
-                    // Generate a random ID
-                    const requestId = this._generateRandomId()
-
-                    // Save callback
-                    this.#callbacks[requestId] = response => {
-                        response.type === 'error'
-                            ? reject(response.message)
-                            : resolve(response)
-                    }
-
                     // Send message
                     this.#conn.send({
                         method: 'connectWallet',
@@ -239,7 +284,11 @@
                 const requestId = this._generateRandomId()
 
                 // Save callback
-                this.#callbacks[requestId] = response => resolve(response)
+                this.#callbacks[requestId] = response => {
+                    response.type === 'error'
+                        ? reject(response.message)
+                        : resolve(response)
+                }
 
                 // Send message
                 this.#conn.send({
