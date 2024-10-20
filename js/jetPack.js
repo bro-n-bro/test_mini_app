@@ -303,7 +303,7 @@
 
 
                 setTimeout(() => {
-                    window.open(`https://t.me/${BOT_USERNAME}/${APP_NAME}`)
+                    Telegram.WebApp.openTelegramLink(`https://t.me/${BOT_USERNAME}/${APP_NAME}`)
                 }, 2000)
             })
         }
