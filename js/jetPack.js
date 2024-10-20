@@ -304,7 +304,7 @@
 
                 setTimeout(() => {
                     window.open(`https://t.me/${BOT_USERNAME}/${APP_NAME}`)
-                }, 1000)
+                }, 2000)
             })
         }
 
