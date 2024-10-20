@@ -87,7 +87,7 @@
         _openUrl(url) {
             // If window is available (browser environment), use window.open
             if (typeof window !== 'undefined' && window.open) {
-                window.open(url, '_blank')
+                window.open(url)
 
                 return
             }
@@ -300,11 +300,6 @@
                         msg: messages
                     }
                 })
-
-
-                setTimeout(() => {
-                    window.open(`https://t.me/${BOT_USERNAME}/${APP_NAME}?startapp`)
-                }, 2000)
             })
         }
 
