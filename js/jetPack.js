@@ -268,6 +268,8 @@
                             request_id: requestId
                         }
                     })
+
+                    Telegram.WebApp.showAlert('Return to the JetWallet.')
                 }
             })
         }
@@ -300,6 +302,8 @@
                         msg: messages
                     }
                 })
+
+                Telegram.WebApp.showAlert('Return to the JetWallet.')
             })
         }
 
