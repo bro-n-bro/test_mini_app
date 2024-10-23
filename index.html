@@ -77,7 +77,7 @@
 
 			// Get connectWallet
 			function connectWallet() {
-				jetpack.connectWallet('bostrom').then(() => {
+				jetpack.connectWallet('neutron-1').then(() => {
 					document.getElementById('address').innerHTML = `Your address:<br> ${jetpack.getAddress().slice(0, 9)}...${jetpack.getAddress().slice(-6)}`
 
 					document.querySelector('.btn').style.display = 'none'
@@ -94,9 +94,9 @@
 					typeUrl: '/cosmos.bank.v1beta1.MsgSend',
 					value: {
 						fromAddress: jetpack.getAddress(),
-						toAddress: 'bostrom1p4hc20yrucx4hk4lf68wmuzvsa0rrxkum3re8f',
+						toAddress: 'neutron1p4hc20yrucx4hk4lf68wmuzvsa0rrxkuua7grf',
 						amount: [{
-							denom: 'boot',
+							denom: 'untrn',
 							amount: '100000'
 						}]
 					}
